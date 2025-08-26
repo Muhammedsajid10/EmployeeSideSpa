@@ -124,7 +124,7 @@ const Login = () => {
 
           <div className="demo-credentials">
             <p className="demo-title">Demo Employee Credentials:</p>
-            <p className="demo-item">Email: <span className="demo-value">sarah.johnson@spa.com</span></p>
+            <p className="demo-item">Email: <span className="demo-value">nina.kowalski@spa.com</span></p>
             <p className="demo-item">Password: <span className="demo-value">Employee@123</span></p>
             <p className="demo-note">Note: All employees use the same password</p>
           </div>
