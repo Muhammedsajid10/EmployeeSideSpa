@@ -1482,8 +1482,8 @@ body {
 }
 
 .check-in-btn {
-  background: linear-gradient(135deg, var(--success-500), var(--success-600));
-  color: white;
+  background: linear-gradient(135deg, var(--success-500), var(--success-500));
+  color: rgb(44, 43, 43);
 }
 
 .check-in-btn:hover:not(.disabled) {
@@ -1494,7 +1494,7 @@ body {
 
 .check-out-btn {
   background: linear-gradient(135deg, var(--error-500), var(--error-600));
-  color: white;
+  color: rgb(44, 43, 43);
 }
 
 .check-out-btn:hover:not(.disabled) {
@@ -1505,7 +1505,7 @@ body {
 
 .absent-btn {
   background: linear-gradient(135deg, var(--warning-500), var(--warning-600));
-  color: white;
+  color: rgb(44, 43, 43);
 }
 
 .absent-btn:hover {
