@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
 import EmployeeManagementSystem from './components/EmployeeManagmentSystem';
 import ProtectedRoute from './components/ProtectedRoute';
+import Employee from './components/Employee'
 import './App.css';
 
 function AppContent() {
@@ -25,7 +26,7 @@ function AppContent() {
 
   return (
     <ProtectedRoute>
-      <EmployeeManagementSystem />
+      <Employee />
     </ProtectedRoute>
   );
 }
