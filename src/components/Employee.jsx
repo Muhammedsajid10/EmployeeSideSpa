@@ -694,6 +694,75 @@ const EmployeeManagementSystem = () => {
   };
 
   const SchedulePage = () => {
+    // Helper: format appointment start time into local time string
+    const formatAppointmentTime = (booking) => {
+      try {
+        const svc = booking?.services?.[0];
+        if (!svc) return '';
+        const raw = svc.startTime || svc.start || svc.time || '';
+        const appointmentDate = booking?.appointmentDate || booking?.date || '';
+
+        // If no time provided, return empty
+        if (!raw) return '';
+
+        // Case A: full ISO with timezone (e.g. 2025-09-29T16:30:00.000Z or 2025-09-29T16:30:00+00:00)
+        if (raw.includes('T') && (raw.endsWith('Z') || /[+-]\d{2}:?\d{2}$/.test(raw))) {
+          const dUtc = new Date(raw);
+          // If we have an appointmentDate and a time part, build a local candidate and compare.
+          if (appointmentDate) {
+            const timePart = raw.split('T')[1].split('.')[0].replace(/Z|[+-].*$/, '');
+            // Build a local Date using numeric components to avoid parsing quirks
+            const buildLocalCandidate = (dateStr, timeStr) => {
+              try {
+                const [y, m, d] = dateStr.split('-').map((v) => parseInt(v, 10));
+                const [hh, mm, ss] = (timeStr || '00:00:00').split(':').map((v) => parseInt(v, 10));
+                if ([y, m, d].some(isNaN)) return null;
+                return new Date(y, (m || 1) - 1, d || 1, hh || 0, mm || 0, ss || 0);
+              } catch (e) {
+                return null;
+              }
+            };
+
+            const localCandidate = buildLocalCandidate(appointmentDate, timePart);
+
+            if (localCandidate && !isNaN(localCandidate)) {
+              // If parsing the raw value as UTC shifts the wall-clock time significantly
+              // (e.g. by more than 1 hour), prefer the reconstructed localCandidate which
+              // preserves the original clock time the user likely selected (fixes cases
+              // where backend stored a local time but appended Z).
+              const diffMinutes = (dUtc.getTime() - localCandidate.getTime()) / 60000;
+              if (Math.abs(diffMinutes) >= 60) {
+                return localCandidate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true });
+              }
+            }
+          }
+          // Default: parse UTC and convert to local
+          return dUtc.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true });
+        }
+
+        // Case B: ISO without timezone (e.g. 2025-09-29T16:30:00) -> treated as local by JS
+        if (raw.includes('T')) {
+          const d = new Date(raw);
+          if (!isNaN(d)) return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true });
+        }
+
+        // Case C: time-only string like '16:30' or '16:30:00' and we have appointmentDate
+        const hhmm = raw.match(/^(\d{1,2}:\d{2})(:?\d{2})?/);
+        if (hhmm && appointmentDate) {
+          const timeStr = hhmm[0] + (hhmm[2] ? '' : ':00');
+          const local = new Date(`${appointmentDate}T${timeStr}`);
+          if (!isNaN(local)) return local.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true });
+        }
+
+        // Fallback: try to parse raw directly
+        const fallback = new Date(raw);
+        if (!isNaN(fallback)) return fallback.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true });
+      } catch (e) {
+        console.warn('Failed to format appointment time', e, booking);
+      }
+      return '';
+    };
+
     const refreshSchedule = async () => {
       await fetchScheduleData();
     };
@@ -776,12 +845,8 @@ const EmployeeManagementSystem = () => {
                               month: 'short',
                               year: 'numeric'
                             })}
-                            {booking.services && booking.services[0]?.startTime &&
-                              ` at ${new Date(booking.services[0].startTime).toLocaleTimeString('en-US', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: true
-                              })}`
+                            {booking.services && booking.services[0] &&
+                              ` at ${formatAppointmentTime(booking)}`
                             }
                           </span>
                         </div>
@@ -845,13 +910,7 @@ const EmployeeManagementSystem = () => {
                       <div className="next-info-item">
                         <Clock className="next-icon" />
                         <span>
-                          {scheduleData[0].services?.[0]?.startTime &&
-                            new Date(scheduleData[0].services[0].startTime).toLocaleTimeString('en-US', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              hour12: true
-                            })
-                          }
+                          {scheduleData[0].services?.[0] && formatAppointmentTime(scheduleData[0])}
                         </span>
                       </div>
                       <div className="next-info-item">

@@ -1,6 +1,6 @@
 // API configuration
 const API_CONFIG = {
-  BASE_URL: 'https://spabackend-0tko.onrender.com/api/v1', // Always use deployed backend
+  BASE_URL: 'https://spabacklat.onrender.com/api/v1', // Always use deployed backend
   ENDPOINTS: {
     AUTH: {
       LOGIN: '/auth/login',
