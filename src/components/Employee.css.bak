@@ -1867,38 +1867,3 @@ body {
   }
 }
 
-
-/* Day Completed Message */
-.day-completed-message {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-3);
-  padding: var(--spacing-6);
-  background: linear-gradient(135deg, var(--success-50), var(--success-100));
-  border: 1px solid var(--success-200);
-  border-radius: var(--radius-lg);
-  color: var(--success-700);
-  font-weight: 600;
-  font-size: var(--font-size-lg);
-  width: 100%;
-  animation: fadeIn 0.5s ease-out;
-}
-
-.completed-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  color: var(--success-600);
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-

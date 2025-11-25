@@ -333,6 +333,7 @@ const EmployeeManagementSystem = () => {
   useEffect(() => {
     fetchAttendanceData();
     fetchReviewData(); // Also load review data on component mount
+    fetchScheduleData(); // Load schedule data for dashboard stats
   }, []);
 
   // Auto-clear success messages after 5 seconds
@@ -763,6 +764,23 @@ const EmployeeManagementSystem = () => {
       return '';
     };
 
+
+    // Helper: Parse date string safely to avoid timezone shifts
+    const getSafeDate = (dateStr) => {
+      try {
+        if (typeof dateStr === 'string') {
+          const datePart = dateStr.split('T')[0];
+          const [y, m, d] = datePart.split('-').map(n => parseInt(n, 10));
+          if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+            return new Date(y, m - 1, d);
+          }
+        }
+        return new Date(dateStr);
+      } catch (e) {
+        return new Date(dateStr);
+      }
+    };
+
     const refreshSchedule = async () => {
       await fetchScheduleData();
     };
@@ -818,10 +836,10 @@ const EmployeeManagementSystem = () => {
                   <div key={booking._id || index} className="appointment-card">
                     <div className="appointment-date-badge">
                       <div className="date-day">
-                        {new Date(booking.appointmentDate).getDate()}
+                        {getSafeDate(booking.appointmentDate).getDate()}
                       </div>
                       <div className="date-month">
-                        {new Date(booking.appointmentDate).toLocaleDateString('en-US', { month: 'short' })}
+                        {getSafeDate(booking.appointmentDate).toLocaleDateString('en-US', { month: 'short' })}
                       </div>
                     </div>
 
@@ -839,7 +857,7 @@ const EmployeeManagementSystem = () => {
                         <div className="info-item">
                           <Clock className="info-icon" />
                           <span>
-                            {new Date(booking.appointmentDate).toLocaleDateString('en-US', {
+                            {getSafeDate(booking.appointmentDate).toLocaleDateString('en-US', {
                               weekday: 'short',
                               day: 'numeric',
                               month: 'short',
@@ -890,14 +908,14 @@ const EmployeeManagementSystem = () => {
                 <div className="next-appointment-content">
                   <div className="next-date-display">
                     <div className="next-date-large">
-                      {new Date(scheduleData[0].appointmentDate).getDate()}
+                      {getSafeDate(scheduleData[0].appointmentDate).getDate()}
                     </div>
                     <div className="next-date-info">
                       <div className="next-month">
-                        {new Date(scheduleData[0].appointmentDate).toLocaleDateString('en-US', { month: 'short' })}
+                        {getSafeDate(scheduleData[0].appointmentDate).toLocaleDateString('en-US', { month: 'short' })}
                       </div>
                       <div className="next-year">
-                        {new Date(scheduleData[0].appointmentDate).getFullYear()}
+                        {getSafeDate(scheduleData[0].appointmentDate).getFullYear()}
                       </div>
                     </div>
                   </div>
@@ -1028,70 +1046,41 @@ const EmployeeManagementSystem = () => {
             </div>
 
             <div className="attendance-actions">
-              <button
-                onClick={handleCheckIn}
-                disabled={attendanceData.isCheckedIn || loading}
-                className={`action-button check-in-btn ${(attendanceData.isCheckedIn || loading) ? 'disabled' : ''}`}
-              >
-                <CheckCircle className="btn-icon" />
-                <span>
-                  {loading && !attendanceData.isCheckedIn ? 'Checking In...' :
-                   attendanceData.isCheckedIn ? 'Already Checked In' : 'Check In'}
-                </span>
-              </button>
-               
-              <button
-                onClick={handleCheckOut}
-                disabled={!attendanceData.isCheckedIn || loading}
-                className={`action-button check-out-btn ${(!attendanceData.isCheckedIn || loading) ? 'disabled' : ''}`}
-              >
-                <XCircle className="btn-icon" />
-                <span>
-                  {loading && attendanceData.isCheckedIn ? 'Checking Out...' :
-                   !attendanceData.isCheckedIn ? 'Check In First' : 'Check Out'}
-                </span>
-              </button>
-            </div>
-
-            <div className="absent-section">
-              <button
-                onClick={() => setShowAbsentForm(!showAbsentForm)}
-                className="action-button absent-btn"
-              >
-                <X className="btn-icon" />
-                <span>Mark as Absent</span>
-              </button>
-
-              {showAbsentForm && (
-                <div className="absent-form">
-                  <textarea
-                    value={absentReason}
-                    onChange={(e) => setAbsentReason(e.target.value)}
-                    placeholder="Enter reason for absence..."
-                    className="absent-textarea"
-                    rows="3"
-                  />
-                  <div className="form-actions">
-                    <button
-                      onClick={submitAbsent}
-                      className="submit-btn"
-                      disabled={!absentReason.trim()}
-                    >
-                      Submit
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowAbsentForm(false);
-                        setAbsentReason('');
-                      }}
-                      className="cancel-btn"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
+              {attendanceData.checkInTime && attendanceData.checkOutTime ? (
+                <div className="day-completed-message">
+                  <CheckCircle className="completed-icon" />
+                  <span>Your day is completed</span>
+                </div>  
+              ) : (
+                <>
+                  <button
+                    onClick={handleCheckIn}
+                    disabled={attendanceData.isCheckedIn || loading}
+                    className={`action-button check-in-btn ${(attendanceData.isCheckedIn || loading) ? 'disabled' : ''}`}
+                  >
+                    <CheckCircle className="btn-icon" />
+                    <span>
+                      {loading && !attendanceData.isCheckedIn ? 'Checking In...' :
+                       attendanceData.isCheckedIn ? 'Already Checked In' : 'Check In'}
+                    </span>
+                  </button>
+                   
+                  <button
+                    onClick={handleCheckOut}
+                    disabled={!attendanceData.isCheckedIn || loading}
+                    className={`action-button check-out-btn ${(!attendanceData.isCheckedIn || loading) ? 'disabled' : ''}`}
+                  >
+                    <XCircle className="btn-icon" />
+                    <span>
+                      {loading && attendanceData.isCheckedIn ? 'Checking Out...' :
+                       !attendanceData.isCheckedIn ? 'Check In First' : 'Check Out'}
+                    </span>
+                  </button>
+                </>
               )}
             </div>
+
+
           </div>
 
           <div className="attendance-history-card">
@@ -1099,7 +1088,13 @@ const EmployeeManagementSystem = () => {
              
             <div className="history-list">
               {attendanceData.attendanceHistory.length > 0 ? (
-                attendanceData.attendanceHistory.map((record, index) => (
+                attendanceData.attendanceHistory
+                  .filter(record => {
+                    const recordDate = new Date(record.date).toDateString();
+                    const today = new Date().toDateString();
+                    return recordDate === today;
+                  })
+                  .map((record, index) => (
                   <div key={record._id || index} className="history-group">
                     {record.checkIn && (
                       <div className="history-item">
@@ -1150,8 +1145,22 @@ const EmployeeManagementSystem = () => {
                     )}
                   </div>
                 ))
-              ) : (
-                // Fallback to local data if no API data
+              ) : null}
+              
+              {attendanceData.attendanceHistory.filter(record => {
+                  const recordDate = new Date(record.date).toDateString();
+                  const today = new Date().toDateString();
+                  return recordDate === today;
+                }).length === 0 && !attendanceData.checkInTime && (
+                <div className="empty-state">
+                  <Clock className="empty-icon" />
+                  <h4>No attendance records today</h4>
+                  <p>Please check in to start your day.</p>
+                </div>
+              )}
+
+              {/* Fallback to local data if no API data but local state exists */
+               attendanceData.attendanceHistory.length === 0 && (
                 <>
                   {attendanceData.checkInTime && (
                     <div className="history-item">
